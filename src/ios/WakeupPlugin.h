@@ -12,5 +12,6 @@
 
 - (void)wakeup:(CDVInvokedUrlCommand*)command;
 - (void)snooze:(CDVInvokedUrlCommand*)command;
+- (void)cancel:(CDVInvokedUrlCommand*)command;
 
 @end
