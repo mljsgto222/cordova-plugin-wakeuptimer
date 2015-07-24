@@ -27,7 +27,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.widget.Toast;
 
 public class WakeupPlugin extends CordovaPlugin {
 
@@ -77,10 +76,11 @@ public class WakeupPlugin extends CordovaPlugin {
 				} else {
 					alarms = new JSONArray(); // default to empty array
 				}
+				WakeupPlugin.connectionCallbackContext = callbackContext;
 				saveToPrefs(cordova.getActivity().getApplicationContext(), alarms);
 				setAlarms(cordova.getActivity().getApplicationContext(), alarms, true);
 
-				WakeupPlugin.connectionCallbackContext = callbackContext;
+
 				PluginResult pluginResult = new PluginResult(PluginResult.Status.OK);
 				pluginResult.setKeepCallback(true);
 				callbackContext.sendPluginResult(pluginResult);
@@ -246,8 +246,7 @@ public class WakeupPlugin extends CordovaPlugin {
 			} else {
 				alarmManager.set(AlarmManager.RTC_WAKEUP, alarmDate.getTimeInMillis(), sender);
 			}
-
-			if(WakeupPlugin.connectionCallbackContext!=null) {
+			if(WakeupPlugin.connectionCallbackContext != null) {
 				JSONObject o=new JSONObject();
 				o.put("type", "set");
 				o.put("alarm_type", type);

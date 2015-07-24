@@ -74,8 +74,9 @@ public class WakeupReceiver extends BroadcastReceiver {
 					.setContentText(message)
 					.setTicker(message);
 
-			builder.setDefaults(0 | android.app.Notification.DEFAULT_VIBRATE);
+			builder.setDefaults(android.app.Notification.DEFAULT_LIGHTS | android.app.Notification.DEFAULT_VIBRATE);
 			builder.setContentIntent(pendingIntent);
+			builder.setAutoCancel(true);
 			Uri uri = null;
 			if(sound != null){
 				sound = sound.split("\\.")[0];

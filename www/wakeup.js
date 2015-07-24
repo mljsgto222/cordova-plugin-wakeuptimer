@@ -1,5 +1,5 @@
 var exec = require("cordova/exec"),
-	channel = require('cordova/channel'),
+    channel = require('cordova/channel'),
     cordova = require('cordova');
 
 /**
@@ -20,17 +20,17 @@ Wakeup.prototype.cancel = function(success, error, id){
 };
 
 Wakeup.prototype.getExtra = function(success){
-	var noop = function(){};
-	exec(success, noop, "WakeupPlugin", "getExtra", []);
+    var noop = function(){};
+    exec(success, noop, "WakeupPlugin", "getExtra", []);
 };
 var wakeup = new Wakeup();
 var getExtra = function(){
-	wakeup.getExtra(function(data){
-        if(data){
-        	var json = JSON.parse(data);
-        	if(json){
-        		cordova.fireDocumentEvent('appOpenWithURL', json);
-        	}
+    wakeup.getExtra(function(data){
+        if(data && data !== 'OK'){
+            var json = JSON.parse(data);
+            if(json){
+                cordova.fireDocumentEvent('appOpenWithURL', json);
+            }
         }
     }, function(error){
         console.log('get extra data error');
