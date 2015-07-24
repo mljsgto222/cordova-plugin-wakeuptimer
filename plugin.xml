@@ -16,6 +16,8 @@
 
     <!-- android -->
     <platform name="android">
+        <hook type="after_plugin_install" src="scripts/android_after_install.js" />
+        <hook type="before_plugin_uninstall" src="scripts/android_before_uninstall.js" />
         <config-file target="res/xml/config.xml" parent="/*">
             <feature name="WakeupPlugin" >
                 <param name="android-package" value="org.nypr.cordova.wakeupplugin.WakeupPlugin"/>
@@ -44,6 +46,8 @@
 
     <!-- ios -->
     <platform name="ios">
+        <hook type="after_plugin_install" src="scripts/ios_after_install.js" />
+
         <config-file target="config.xml" parent="/*">
             <feature name="WakeupPlugin">
                 <param name="ios-package" value="WakeupPlugin"/>

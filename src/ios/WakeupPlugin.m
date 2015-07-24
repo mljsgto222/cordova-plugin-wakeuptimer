@@ -30,6 +30,7 @@ static NSString * const kWakeupPluginJSONOneTimeValue = @"onetime";
 static NSString * const kWakeupPluginJSONDaylistValue = @"daylist";
 static NSString * const kWakeupPluginJSONDateTimeValue = @"datetime";
 static NSString * const kWakeupPluginJSONSetValue = @"set";
+static NSString * const kWakeupPluginJSONNotificationValue = @"notification";
 
 static NSString * const kWakeupPluginJSONDaySundayValue = @"sunday";
 static NSString * const kWakeupPluginJSONDayMondayValue = @"monday";
@@ -48,6 +49,12 @@ static NSString * const kWakeupPluginAlarmSettingsFile = @"alarmsettings.plist";
 @end
 
 @implementation WakeupPlugin
+
+static NSString* extras = nil;
+
++ (void)setExtra:(NSString *)extra{
+    extras = extra;
+}
 
 - (void)pluginInitialize
 {
@@ -114,6 +121,17 @@ static NSString * const kWakeupPluginAlarmSettingsFile = @"alarmsettings.plist";
     [self cancelAlarm:alarmId];
 
     pluginResult = [CDVPluginResult resultWithStatus: CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+- (void)getExtra:(CDVInvokedUrlCommand *)command{
+    CDVPluginResult* pluginResult = nil;
+    if(extras != nil){
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:extras];
+        extras = nil;
+    } else {
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    }
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
@@ -217,6 +235,7 @@ static NSString * const kWakeupPluginAlarmSettingsFile = @"alarmsettings.plist";
             if (jsonData) {
                 json = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
             }
+            
 
             alarm.userInfo = [[NSDictionary alloc] initWithObjectsAndKeys:
                               kWakeupPluginJSONWakeupValue, kWakeupPluginJSONTypeKey,
@@ -241,7 +260,7 @@ static NSString * const kWakeupPluginAlarmSettingsFile = @"alarmsettings.plist";
 
 - (void)wup_setAlarms:(NSArray *)alarms cancelAlarms:(BOOL)cancelAlarms{
 
-	BOOL backgroundSupported = [self wup_isBackgroundSupported];
+    BOOL backgroundSupported = [self wup_isBackgroundSupported];
     if(cancelAlarms) {
         [self wup_cancelAlarms];
     }
@@ -324,12 +343,12 @@ static NSString * const kWakeupPluginAlarmSettingsFile = @"alarmsettings.plist";
 }
 
 - (BOOL) wup_isBackgroundSupported {
-	UIDevice* device = [UIDevice currentDevice];
-	BOOL backgroundSupported = NO;
-	if ([device respondsToSelector:@selector(isMultitaskingSupported)]) {
-		backgroundSupported = device.multitaskingSupported;
-	}
-	return backgroundSupported;
+    UIDevice* device = [UIDevice currentDevice];
+    BOOL backgroundSupported = NO;
+    if ([device respondsToSelector:@selector(isMultitaskingSupported)]) {
+        backgroundSupported = device.multitaskingSupported;
+    }
+    return backgroundSupported;
 }
 
 -(NSDate*) wup_getOneTimeAlarmDate:(NSDictionary*)time {
@@ -399,7 +418,7 @@ static NSString * const kWakeupPluginAlarmSettingsFile = @"alarmsettings.plist";
 
     }
 
-	return alarmDate;
+    return alarmDate;
 }
 
 -(NSDate*) wup_getTimeFromNow:(NSDictionary*)time {
@@ -464,16 +483,22 @@ static NSString * const kWakeupPluginAlarmSettingsFile = @"alarmsettings.plist";
 - (void)wup_onLocalNotification:(NSNotification *)notification
 {
     NSLog(@"Wakeup Plugin received local notification while app is running");
-
     UILocalNotification* localNotification = [notification object];
     NSString * notificationType = [[localNotification userInfo] objectForKey:kWakeupPluginJSONTypeKey];
-
+    
     if ( notificationType!=nil && [notificationType isEqualToString:kWakeupPluginJSONWakeupValue] && self.callbackId!=nil) {
         NSLog(@"wakeup detected!");
         NSString * extra = [[localNotification userInfo] objectForKey:kWakeupPluginJSONExtraKey];
-        CDVPluginResult * pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{kWakeupPluginJSONTypeKey: kWakeupPluginJSONWakeupValue, kWakeupPluginJSONExtraKey : extra}];
-        [pluginResult setKeepCallbackAsBool:YES];
-        [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
+        CDVPluginResult * pluginResult = nil;
+        if([UIApplication sharedApplication].applicationState != UIApplicationStateInactive && [UIApplication sharedApplication].applicationState != UIApplicationStateBackground){
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:@{kWakeupPluginJSONTypeKey: kWakeupPluginJSONWakeupValue, kWakeupPluginJSONExtraKey : extra}];
+            [pluginResult setKeepCallbackAsBool:YES];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
+        }else{
+            extras = extra;
+        }
+    }else{
+        extras = [[localNotification userInfo] objectForKey:kWakeupPluginJSONExtraKey];
     }
 
 }

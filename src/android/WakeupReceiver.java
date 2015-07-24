@@ -4,22 +4,32 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.cordova.PluginResult;
+import org.apache.cordova.dialogs.Notification;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.app.AlarmManager;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+
+import com.avos.avoscloud.AVOSCloud;
 
 public class WakeupReceiver extends BroadcastReceiver {
 
 	private static final String LOG_TAG = "WakeupReceiver";
+	private static final int ID = 10086;
+	private Ringtone ringtone;
 
 	@SuppressLint({ "SimpleDateFormat", "NewApi" })
 	@Override
@@ -40,17 +50,50 @@ public class WakeupReceiver extends BroadcastReceiver {
 			i.putExtra("wakeup", true);
 			Bundle extrasBundle = intent.getExtras();
 			String extras=null;
-			if (extrasBundle!=null && extrasBundle.get("extra")!=null) {
-				extras = extrasBundle.get("extra").toString();
+			String sound = null;
+			String url = null;
+			String message = "";
+			if(extrasBundle!=null) {
+				if (extrasBundle.getString("extra") != null) {
+					extras = extrasBundle.getString("extra");
+					i.putExtra("extra", extras);
+				}
+				if (extrasBundle.getString("sound") != null) {
+					sound = extrasBundle.getString("sound").split("\\.")[0];
+				}
+				if (extrasBundle.getString("message") != null){
+					message = extrasBundle.getString("message");
+				}
 			}
-			
-			if (extras!=null) {
-				i.putExtra("extra", extras);
-			}
-			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-			context.startActivity(i);
 
-			if(WakeupPlugin.connectionCallbackContext!=null) {
+			i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, i,  PendingIntent.FLAG_CANCEL_CURRENT);
+			NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
+					.setSmallIcon(context.getApplicationInfo().icon)
+					.setContentTitle(context.getString(context.getApplicationInfo().labelRes))
+					.setContentText(message)
+					.setTicker(message);
+
+			builder.setDefaults(0 | android.app.Notification.DEFAULT_VIBRATE);
+			builder.setContentIntent(pendingIntent);
+			Uri uri = null;
+			if(sound != null){
+				sound = sound.split("\\.")[0];
+				int soundId = AVOSCloud.applicationContext.getResources().getIdentifier(sound, "raw", AVOSCloud.applicationContext.getPackageName());
+				if(soundId > 0){
+					uri = Uri.parse("android.resource://" + AVOSCloud.applicationContext.getPackageName() + "/" + soundId);
+				}else{
+					uri = RingtoneManager.getActualDefaultRingtoneUri(AVOSCloud.applicationContext, RingtoneManager.TYPE_NOTIFICATION);
+				}
+			}else{
+				uri = RingtoneManager.getActualDefaultRingtoneUri(AVOSCloud.applicationContext, RingtoneManager.TYPE_NOTIFICATION);
+			}
+			initSound(uri);
+			ringtone.play();
+			NotificationManager manager = (NotificationManager) AVOSCloud.applicationContext.getSystemService(Context.NOTIFICATION_SERVICE);
+			manager.notify(ID, builder.build());
+
+			if(WakeupPlugin.connectionCallbackContext!=null && !WakeupPlugin.inBackground) {
 				JSONObject o=new JSONObject();
 				o.put("type", "wakeup");
 				if (extras!=null) {
@@ -58,7 +101,7 @@ public class WakeupReceiver extends BroadcastReceiver {
 				}
 				PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, o);
 				pluginResult.setKeepCallback(true);
-				WakeupPlugin.connectionCallbackContext.sendPluginResult(pluginResult);  
+				WakeupPlugin.connectionCallbackContext.sendPluginResult(pluginResult);
 			}
 			
 			if (extrasBundle!=null && extrasBundle.getString("type")!=null && extrasBundle.getString("type").equals("daylist")) {
@@ -86,5 +129,12 @@ public class WakeupReceiver extends BroadcastReceiver {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void initSound(Uri sound){
+		if(ringtone != null && ringtone.isPlaying()){
+			ringtone.stop();
+		}
+		ringtone = RingtoneManager.getRingtone(AVOSCloud.applicationContext, sound);
 	}
 }

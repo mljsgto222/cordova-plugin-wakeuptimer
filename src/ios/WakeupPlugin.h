@@ -10,8 +10,11 @@
 
 @interface WakeupPlugin : CDVPlugin
 
++ (void)setExtra:(NSString*)extra;
+
 - (void)wakeup:(CDVInvokedUrlCommand*)command;
 - (void)snooze:(CDVInvokedUrlCommand*)command;
 - (void)cancel:(CDVInvokedUrlCommand*)command;
+- (void)getExtra:(CDVInvokedUrlCommand*)command;
 
 @end
