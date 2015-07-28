@@ -36,10 +36,6 @@ var getExtra = function(){
         console.log('get extra data error');
     });
 };
-channel.onResume.subscribe(function(){
-    getExtra();
-});
-
 channel.onCordovaReady.subscribe(function(){
     getExtra();
 });

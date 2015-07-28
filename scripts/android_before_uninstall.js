@@ -13,7 +13,8 @@ module.exports = function(context){
     var content = fs.readFileSync(targetFile, {encoding: 'utf8'});
     if(content.indexOf('org.nypr.cordova.wakeupplugin.WakeupPlugin') >= 0){
     	content = content.replace('import org.nypr.cordova.wakeupplugin.WakeupPlugin;', '')
-    	.replace('if(intent.hasExtra("extra")){ WakeupPlugin.extra = intent.getStringExtra("extra"); }\n', '')
+    	.replace('if(intent.hasExtra("extra")){ WakeupPlugin.setExtra(intent.getStringExtra("extra")); }\n', '')
+        .replace('if(getIntent().hasExtra("extra")) { WakeupPlugin.setExtra(getIntent().getStringExtra("extra"));}\n', '');
     	.replace('WakeupPlugin.inBackground = false;\n', '')
     	.replace('WakeupPlugin.inBackground = true;\n', '');
 

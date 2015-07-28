@@ -51,9 +51,21 @@ static NSString * const kWakeupPluginAlarmSettingsFile = @"alarmsettings.plist";
 @implementation WakeupPlugin
 
 static NSString* extras = nil;
+static WakeupPlugin* wakeupPlugin = nil;
+static NSString* callbackId = nil;
 
 + (void)setExtra:(NSString *)extra{
     extras = extra;
+    [WakeupPlugin sendExtra];
+}
+
++ (void)sendExtra{
+    if(callbackId != nil && extras != nil){
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:extras];
+        [pluginResult setKeepCallbackAsBool:true];
+        extras = nil;
+        [wakeupPlugin.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
+    }
 }
 
 - (void)pluginInitialize
@@ -125,14 +137,9 @@ static NSString* extras = nil;
 }
 
 - (void)getExtra:(CDVInvokedUrlCommand *)command{
-    CDVPluginResult* pluginResult = nil;
-    if(extras != nil){
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:extras];
-        extras = nil;
-    } else {
-        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    }
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+    callbackId = command.callbackId;
+    wakeupPlugin = self;
+    [WakeupPlugin sendExtra];
 }
 
 #pragma mark Preference storage methods
@@ -495,10 +502,10 @@ static NSString* extras = nil;
             [pluginResult setKeepCallbackAsBool:YES];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:self.callbackId];
         }else{
-            extras = extra;
+            [WakeupPlugin setExtra:extra];
         }
     }else{
-        extras = [[localNotification userInfo] objectForKey:kWakeupPluginJSONExtraKey];
+        [WakeupPlugin setExtra:[[localNotification userInfo] objectForKey:kWakeupPluginJSONExtraKey]];
     }
 
 }

@@ -4,7 +4,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import org.apache.cordova.PluginResult;
-import org.apache.cordova.dialogs.Notification;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -51,7 +50,6 @@ public class WakeupReceiver extends BroadcastReceiver {
 			Bundle extrasBundle = intent.getExtras();
 			String extras=null;
 			String sound = null;
-			String url = null;
 			String message = "";
 			if(extrasBundle!=null) {
 				if (extrasBundle.getString("extra") != null) {

@@ -14,10 +14,11 @@ module.exports = function(context){
     if(content.indexOf('org.nypr.cordova.wakeupplugin.WakeupPlugin') === -1){
     	content = content.replace('import org.apache.cordova.*', 'import org.apache.cordova.*;\nimport org.nypr.cordova.wakeupplugin.WakeupPlugin');
 
+        content = content.replace('super.onCreate(savedInstanceState);', 'super.onCreate(savedInstanceState);\nif(getIntent().hasExtra("extra")) { WakeupPlugin.setExtra(getIntent().getStringExtra("extra"));}\n');
     	if(content.indexOf('onNewIntent') === -1){
-    		content = content.replace('public void onCreate', 'public void onNewIntent(android.content.Intent intent){\nsuper.onNewIntent(intent);\nif(intent.hasExtra("extra")){ WakeupPlugin.extra = intent.getStringExtra("extra"); }\n}\n@Override\npublic void onCreate');
+    		content = content.replace('public void onCreate', 'public void onNewIntent(android.content.Intent intent){\nsuper.onNewIntent(intent);\nif(intent.hasExtra("extra")){ WakeupPlugin.setExtra(intent.getStringExtra("extra")); }\n}\n@Override\npublic void onCreate');
     	}else{
-    		content = content.replace('super.onNewIntent(intent);', 'super.onNewIntent(intent);\nif(intent.hasExtra("extra")){ WakeupPlugin.extra = intent.getStringExtra("extra"); }\n');
+    		content = content.replace('super.onNewIntent(intent);', 'super.onNewIntent(intent);\nif(intent.hasExtra("extra")){ WakeupPlugin.setExtra(intent.getStringExtra("extra")); }\n');
     	}
 
     	if(content.indexOf('onResume') === -1){

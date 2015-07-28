@@ -28,6 +28,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
+import javax.security.auth.callback.Callback;
+
 public class WakeupPlugin extends CordovaPlugin {
 
 	protected static final String LOG_TAG = "WakeupPlugin";
@@ -49,9 +51,14 @@ public class WakeupPlugin extends CordovaPlugin {
 		}
 	};
 
-	public static String extra = null;
+	private static String extra = null;
+	public static void setExtra(String extras){
+		extra = extras;
+		getExtra();
+	}
 	public static boolean inBackground = false;
 	public static CallbackContext connectionCallbackContext;
+	public static CallbackContext openCallbackContext;
 
   @Override
   public void onReset() {
@@ -103,11 +110,8 @@ public class WakeupPlugin extends CordovaPlugin {
 				int id = args.getInt(0);
                 cancelAlarm(this.cordova.getActivity(), id);
 			}else if(action.equalsIgnoreCase("getExtra")){
-				if(extra != null){
-					callbackContext.success(extra);
-					extra = null;
-				}
-				callbackContext.success();
+				openCallbackContext = callbackContext;
+				getExtra();
 			}else{
 				PluginResult pluginResult = new PluginResult(PluginResult.Status.ERROR, LOG_TAG + " error: invalid action (" + action + ")");
 				pluginResult.setKeepCallback(true);
@@ -126,6 +130,14 @@ public class WakeupPlugin extends CordovaPlugin {
 			ret = false;
 		}
 		return ret;
+	}
+	public static void getExtra(){
+		if(openCallbackContext != null && extra != null){
+			PluginResult pluginResult = new PluginResult(PluginResult.Status.OK, extra);
+			extra = null;
+			pluginResult.setKeepCallback(true);
+			openCallbackContext.sendPluginResult(pluginResult);
+		}
 	}
 
   public static void setAlarmsFromPrefs(Context context) {
